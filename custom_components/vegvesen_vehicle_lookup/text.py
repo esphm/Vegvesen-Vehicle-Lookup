@@ -48,8 +48,8 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
     _attr_icon = "mdi:card-text-outline"
     _attr_mode = TextMode.TEXT
     _attr_native_min = 7
-    _attr_native_max = 7
-    _attr_pattern = r"[A-Za-z]{2}\d{5}"
+    _attr_native_max = 8
+    _attr_pattern = r"[A-Za-z]{2} ?\d{5}"
 
     def __init__(
         self,

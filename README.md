@@ -21,7 +21,7 @@ Enter a registration number → get 106 vehicle attributes as sensor entities.
 ## ⚠️ Limitations
 
 - Only **technical vehicle data** is returned — no owner information
-- Registration number validation expects `2 letters + 5 digits` (e.g. `AB12345`)
+- Registration number validation expects `2 letters + 5 digits` (e.g. `AB12345` or `AB 12345`)
 - API rate limit: **50,000 calls/day** per key
 
 ---
