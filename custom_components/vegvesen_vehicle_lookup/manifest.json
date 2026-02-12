@@ -1,0 +1,13 @@
+{
+  "domain": "vegvesen_vehicle_lookup",
+  "name": "Vegvesen Vehicle Lookup",
+  "version": "1.0.0",
+  "documentation": "https://github.com/your-username/vegvesen-vehicle-lookup",
+  "issue_tracker": "https://github.com/your-username/vegvesen-vehicle-lookup/issues",
+  "codeowners": [],
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "dependencies": [],
+  "homeassistant": "2024.1.0"
+}

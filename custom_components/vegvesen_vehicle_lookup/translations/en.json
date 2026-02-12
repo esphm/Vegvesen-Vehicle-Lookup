@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vegvesen Vehicle Lookup",
+        "description": "Enter your Statens vegvesen API key.\n\nYou can apply for an API key at:\nhttps://www.vegvesen.no/dinside/data-og-api-er/tilgang-til-api-for-kjoretoyopplysninger/vis",
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Your Statens vegvesen API key for the Kjøretøydata enkeltoppslag API"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid API key. Please verify your key and try again.",
+      "cannot_connect": "Could not connect to the Vegvesen API. Please check your network and try again later.",
+      "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vegvesen Vehicle Lookup Options",
+        "description": "Configure debounce behaviour for vehicle lookups.",
+        "data": {
+          "debounce_seconds": "Debounce delay (seconds)",
+          "fallback_lookup_seconds": "Fallback lookup timeout (seconds)"
+        },
+        "data_description": {
+          "debounce_seconds": "Seconds to wait after the last text change before performing a lookup. Set to 0 to look up immediately on every change.",
+          "fallback_lookup_seconds": "Maximum seconds to wait after the first text change before forcing a lookup, even if the user keeps editing. Acts as a safety net. Set to 0 to disable."
+        }
+      }
+    }
+  }
+}

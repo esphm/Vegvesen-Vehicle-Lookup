@@ -1,0 +1,16 @@
+lookup:
+  name: Look up vehicle
+  description: >-
+    Look up vehicle data from Statens vegvesen by registration number.
+    If regnr is provided, the text entity is updated and a lookup is triggered.
+    If omitted, a lookup is triggered using the currently entered registration number.
+  fields:
+    regnr:
+      name: Registration number
+      description: >-
+        Norwegian vehicle registration number (2 letters + 5 digits, e.g. EF56000).
+        Optional – if omitted, the current value is used.
+      required: false
+      example: "EF56000"
+      selector:
+        text:
