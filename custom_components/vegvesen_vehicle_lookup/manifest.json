@@ -1,7 +1,7 @@
 {
   "domain": "vegvesen_vehicle_lookup",
   "name": "Vegvesen Vehicle Lookup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/your-username/vegvesen-vehicle-lookup",
   "issue_tracker": "https://github.com/your-username/vegvesen-vehicle-lookup/issues",
   "codeowners": [],
