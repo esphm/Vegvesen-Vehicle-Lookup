@@ -1,103 +1,76 @@
-# Vegvesen Vehicle Lookup
+# 🚗 Vegvesen Vehicle Lookup - Custom Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-A Home Assistant custom integration that looks up Norwegian vehicle technical data from [Statens vegvesen](https://www.vegvesen.no/) using their **Autosys Kjøretøydata – enkeltoppslag** API.
+A Home Assistant custom integration for looking up Norwegian vehicle technical data from [Statens vegvesen](https://www.vegvesen.no/) using the **Autosys enkeltoppslag** API.
 
-This repository was made with Claude Opus 4.6.
+Enter a registration number → get 106 vehicle attributes as sensor entities.
 
----
-
-## Features
-
-- **106 vehicle attributes** – Make, model, fuel type, engine specs, weights, dimensions, CO₂/WLTP/NEDC emissions, noise levels, inspection dates, and more. 24 sensors are enabled by default; the remaining 82 can be individually enabled via the Home Assistant entity UI.
-- **On-demand updates only** – No polling. Lookups are triggered only when:
-  - The registration number is changed (debounced).
-  - The "Lookup Now" button is pressed.
-  - The `vegvesen_vehicle_lookup.lookup` service is called.
-  - Home Assistant starts (if a registration number was previously entered).
-- **Entity-level control** – Enable or disable individual sensors from the Home Assistant Entities page — no options flow needed.
-- **Debounce control** – Configure debounce delay and a fallback timeout via the Options flow.
-- **Diagnostic entities** – Last lookup status, last updated timestamp, and raw JSON response for troubleshooting.
-- **HACS compatible** – Install via the Home Assistant Community Store.
-
-## Limitations
-
-- **Owner information is not available** from the enkeltoppslag API. Only technical vehicle data is returned.
-- Registration number format is validated as 2 letters + 5 digits (e.g., `EF56000`). Personal/veteran plates with other formats are not supported by the validation, though the API itself may accept them.
-- The API has a rate limit of **50,000 calls per API key per day**.
+> Built with Claude Opus 4.6
 
 ---
 
-## Installation
+## ✨ Features
+
+- **106 vehicle attributes** — make, model, fuel type, engine specs, weights, dimensions, CO₂/WLTP/NEDC emissions, noise levels, inspection dates, and more
+- **24 sensors enabled by default** — enable any of the remaining 82 from the HA entity UI
+- **On-demand only** — no polling; lookups trigger on text input change, button press, service call, or HA restart
+- **Smart debounce** — configurable delay with fallback timeout for rapid edits
+- **Diagnostic sensors** — lookup status, timestamp, and raw JSON response
+
+## ⚠️ Limitations
+
+- Only **technical vehicle data** is returned — no owner information
+- Registration number validation expects `2 letters + 5 digits` (e.g. `AB12345`)
+- API rate limit: **50,000 calls/day** per key
+
+---
+
+## 📦 Installation
 
 ### HACS (recommended)
 
-1. Open HACS in Home Assistant.
-2. Go to **Integrations** → click the three-dot menu (⋮) → **Custom repositories**.
-3. Add this repository URL and select **Integration** as the category.
-4. Click **Install** on the Vegvesen Vehicle Lookup card.
-5. Restart Home Assistant.
+1. Open **HACS** → **Integrations** → ⋮ → **Custom repositories**
+2. Add `https://github.com/esphm/Vegvesen-Vehicle-Lookup` as **Integration**
+3. Install and restart Home Assistant
 
 ### Manual
 
-1. Copy the `custom_components/vegvesen_vehicle_lookup` folder into your Home Assistant `config/custom_components/` directory.
-2. Restart Home Assistant.
+Copy `custom_components/vegvesen_vehicle_lookup/` to your HA `config/custom_components/` and restart.
 
 ---
 
-## Configuration
+## ⚙️ Setup
 
-### Step 1: Add the integration
-
-1. In Home Assistant, go to **Settings** → **Devices & Services** → **Add Integration**.
-2. Search for **Vegvesen Vehicle Lookup**.
-3. Enter your Statens vegvesen API key.
-   - You can apply for a key at: <https://www.vegvesen.no/dinside/data-og-api-er/tilgang-til-api-for-kjoretoyopplysninger/vis>
-4. The integration validates your key against the API. If it fails, double-check your key.
-
-### Step 2: Configure options (optional)
-
-1. Go to **Settings** → **Devices & Services** → **Vegvesen Vehicle Lookup** → **Configure**.
-2. Set debounce behaviour:
-   - **`debounce_seconds`** (default `15`): After you commit a registration number change, wait this many seconds before performing the lookup. Resets if the value changes again within the window. Set to `0` to look up immediately.
-   - **`fallback_lookup_seconds`** (default `60`): Maximum wait time after the *first* change in a series of rapid edits. Even if the user keeps changing the value, a lookup is forced after this duration. Set to `0` to disable.
-
-### Step 3: Enable/disable sensors
-
-After your first lookup, all 106 attribute sensors are created. 24 are enabled by default. To enable additional sensors:
-
-1. Go to **Settings** → **Devices & Services** → **Vegvesen Vehicle Lookup** → your device.
-2. Click a disabled entity → **Enable** (or use the Entities page to bulk-enable).
+1. **Settings** → **Devices & Services** → **Add Integration** → search **Vegvesen Vehicle Lookup**
+2. Enter your Statens vegvesen API key ([apply here](https://www.vegvesen.no/dinside/data-og-api-er/tilgang-til-api-for-kjoretoyopplysninger/vis))
+3. Optionally configure debounce timing under **Configure**:
+   - `debounce_seconds` (default `15`) — delay before lookup after text change
+   - `fallback_lookup_seconds` (default `60`) — max wait during rapid edits
 
 ---
 
-## Usage
+## 🔍 Usage
 
-### Basic flow
-
-1. Find the **Vehicle Registration Number** text entity (under your Vegvesen Vehicle Lookup device).
-2. Enter a registration number (e.g., `EF56000`) and press Enter / save.
-3. Wait for the debounce timer (default 15 seconds), or press the **Lookup Now** button for an immediate result.
-4. Sensor entities update with the vehicle's technical data.
+1. Set the **Vehicle Registration Number** text entity to a registration number
+2. Wait for the debounce timer, or press **Lookup Now**
+3. Sensor entities populate with vehicle data
 
 ### Service call
-
-You can also trigger lookups from automations or scripts:
 
 ```yaml
 service: vegvesen_vehicle_lookup.lookup
 data:
-  regnr: "EF56000"
+  regnr: "AB12345"
 ```
 
-If `regnr` is omitted, the lookup uses the currently entered registration number.
+Omit `regnr` to use the currently entered registration number.
 
 ### Automation example
 
 ```yaml
 automation:
-  - alias: "Look up vehicle on tag scan"
+  - alias: "Look up vehicle on NFC tag scan"
     trigger:
       - platform: tag
         tag_id: my_nfc_tag
@@ -109,27 +82,27 @@ automation:
 
 ---
 
-## Entities
+## 📊 Entities
 
 | Entity | Type | Description |
 |---|---|---|
-| Vehicle Registration Number | `text` | Editable field for the registration number |
+| Vehicle Registration Number | `text` | Editable registration number input |
 | Lookup Now | `button` | Trigger an immediate lookup |
-| *(106 vehicle attribute sensors)* | `sensor` | See [Supported Attributes](#supported-attributes) below |
-| Last Lookup Status | `sensor` | Diagnostic: success / not_found / error |
-| Last Updated | `sensor` | Diagnostic: timestamp of last lookup |
-| Raw Response | `sensor` | Diagnostic: truncated raw JSON (disabled by default) |
+| *(106 attribute sensors)* | `sensor` | See [full list](#-supported-attributes) below |
+| Last Lookup Status | `sensor` | 🔧 Diagnostic — success / not_found / error |
+| Last Updated | `sensor` | 🔧 Diagnostic — timestamp of last lookup |
+| Raw Response | `sensor` | 🔧 Diagnostic — raw JSON (disabled by default) |
 
 ---
 
-## Supported Attributes
+## 📋 Supported Attributes
 
-All 106 attributes from the Statens vegvesen API are available as sensor entities. **24 are enabled by default** (marked ✅); the remaining 82 are created but disabled. Enable them from the Home Assistant Entities page.
+106 attributes from the API. **24 enabled by default** (✅). Enable the rest from **Settings** → **Entities**.
 
 <details>
-<summary>Full list of 106 attributes</summary>
+<summary>Show all 106 attributes</summary>
 
-| Key | Name | Unit | Default |
+| Key | Name | Unit | On |
 |---|---|---|:---:|
 | `registration_number` | Registration Number | | ✅ |
 | `chassis_number` | Chassis Number (VIN) | | ✅ |
@@ -242,35 +215,18 @@ All 106 attributes from the Statens vegvesen API are available as sensor entitie
 
 ---
 
-## Troubleshooting
-
-### Common issues
+## 🐛 Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| `invalid_auth` during setup | Verify your API key. Keys can be revoked or expire. |
-| `not_found` status | The registration number doesn't exist or is in the wrong format. |
-| `connection_error` | Check your Home Assistant's internet connectivity. |
-| Sensors show `None` | The field may not exist for that vehicle type (e.g., electric cars have no cylinder count). Enable the **Raw Response** diagnostic entity and inspect the JSON. |
-| Sensors missing | Most sensors are disabled by default. Go to the device page and enable the ones you need. |
+| `invalid_auth` during setup | Verify your API key — it may have been revoked or expired |
+| `not_found` status | Registration number doesn't exist or wrong format |
+| `connection_error` | Check HA internet connectivity |
+| Sensors show `None` | Field doesn't exist for this vehicle type (e.g. EVs have no cylinder count) |
+| Sensors missing | Most are disabled by default — enable them from the device page |
 
-### Testing with curl
-
-You can test your API key and a registration number directly:
-
-```bash
-curl -s \
-  -H "Accept: application/json" \
-  -H "SVV-Authorization: Apikey YOUR_API_KEY_HERE" \
-  "https://www.vegvesen.no/ws/no/vegvesen/kjoretoy/felles/datautlevering/enkeltoppslag/kjoretoydata?kjennemerke=EF56000" \
-  | python3 -m json.tool
-```
-
-Replace `YOUR_API_KEY_HERE` with your actual key and `EF56000` with a valid registration number.
-
-### Enabling debug logging
-
-Add to your `configuration.yaml`:
+<details>
+<summary>🔧 Debug logging</summary>
 
 ```yaml
 logger:
@@ -279,21 +235,35 @@ logger:
     custom_components.vegvesen_vehicle_lookup: debug
 ```
 
+</details>
+
+<details>
+<summary>🧪 Test with curl</summary>
+
+```bash
+curl -s \
+  -H "Accept: application/json" \
+  -H "SVV-Authorization: Apikey YOUR_API_KEY" \
+  "https://www.vegvesen.no/ws/no/vegvesen/kjoretoy/felles/datautlevering/enkeltoppslag/kjoretoydata?kjennemerke=AB12345" \
+  | python3 -m json.tool
+```
+
+</details>
+
 ---
 
-## API Reference
+## 📚 API Reference
 
-- **Endpoint**: `https://www.vegvesen.no/ws/no/vegvesen/kjoretoy/felles/datautlevering/enkeltoppslag/kjoretoydata`
-- **Method**: GET
-- **Query parameter**: `kjennemerke` (registration number)
-- **Headers**:
-  - `Accept: application/json`
-  - `SVV-Authorization: Apikey {your_key}`
-- **Documentation**: <https://autosys-kjoretoy-api.atlas.vegvesen.no/api-ui/index-enkeltoppslag.html>
-- **OpenAPI spec**: <https://akfell-datautlevering.atlas.vegvesen.no/v3/api-docs/Default>
+| | |
+|---|---|
+| **Endpoint** | `https://www.vegvesen.no/ws/no/vegvesen/kjoretoy/felles/datautlevering/enkeltoppslag/kjoretoydata` |
+| **Method** | GET |
+| **Query param** | `kjennemerke` (registration number) |
+| **Headers** | `Accept: application/json` · `SVV-Authorization: Apikey {key}` |
+| **Docs** | [API UI](https://autosys-kjoretoy-api.atlas.vegvesen.no/api-ui/index-enkeltoppslag.html) · [OpenAPI spec](https://akfell-datautlevering.atlas.vegvesen.no/v3/api-docs/Default) |
 
 ---
 
-## License
+## 📄 License
 
-This project is provided as-is under the [MIT License](LICENSE).
+[MIT](LICENSE)
