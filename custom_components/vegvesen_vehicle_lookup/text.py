@@ -62,6 +62,7 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         self._attr_native_value: str | None = None
         self._debounce_unsub: CALLBACK_TYPE | None = None
         self._fallback_unsub: CALLBACK_TYPE | None = None
+        self._startup_unsub: CALLBACK_TYPE | None = None
 
     # -- Device info -----------------------------------------------------------
 
@@ -84,12 +85,12 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if last_state and last_state.state not in (None, "unknown", "unavailable", ""):
             restored = last_state.state.upper().replace(" ", "")
-            if re.match(REGNR_PATTERN, restored):
+            if re.fullmatch(REGNR_PATTERN, restored):
                 self._attr_native_value = restored
                 self.coordinator.regnr = restored
                 _LOGGER.debug("Restored regnr: %s – triggering lookup", restored)
                 # Schedule initial lookup shortly after startup
-                async_call_later(
+                self._startup_unsub = async_call_later(
                     self.hass, 5, self._startup_lookup
                 )
 
@@ -97,6 +98,8 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         """Cancel pending timers."""
         self._cancel_debounce()
         self._cancel_fallback()
+        self._cancel_startup()
+        await super().async_will_remove_from_hass()
 
     # -- Public API for TextEntity ---------------------------------------------
 
@@ -106,10 +109,12 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         self._attr_native_value = normalized
         self.async_write_ha_state()
 
-        if re.match(REGNR_PATTERN, normalized):
+        if re.fullmatch(REGNR_PATTERN, normalized):
             self.coordinator.regnr = normalized
             self._schedule_debounced_lookup()
         else:
+            self.cancel_pending_lookup()
+            self.coordinator.regnr = None
             _LOGGER.debug("Value '%s' does not match regnr pattern – no lookup", value)
 
     def set_regnr_from_service(self, value: str) -> None:
@@ -118,9 +123,14 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         Used by the service handler to keep the text entity in sync.
         """
         self._attr_native_value = value
+        self.cancel_pending_lookup()
+        self.async_write_ha_state()
+
+    @callback
+    def cancel_pending_lookup(self) -> None:
+        """Cancel lookups scheduled by an earlier text change."""
         self._cancel_debounce()
         self._cancel_fallback()
-        self.async_write_ha_state()
 
     # -- Debounce logic --------------------------------------------------------
 
@@ -168,6 +178,7 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
     @callback
     def _startup_lookup(self, _now) -> None:
         """Initial lookup after HA start."""
+        self._startup_unsub = None
         self.hass.async_create_task(self._trigger_lookup())
 
     async def _trigger_lookup(self) -> None:
@@ -183,3 +194,8 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
         if self._fallback_unsub is not None:
             self._fallback_unsub()
             self._fallback_unsub = None
+
+    def _cancel_startup(self) -> None:
+        if self._startup_unsub is not None:
+            self._startup_unsub()
+            self._startup_unsub = None

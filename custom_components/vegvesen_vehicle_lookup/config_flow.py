@@ -6,13 +6,13 @@ import hashlib
 import logging
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import VegvesenApi, VegvesenAuthError, VegvesenConnectionError
 from .const import (
+    API_KEY_URL,
     CONF_API_KEY,
     CONF_DEBOUNCE_SECONDS,
     CONF_FALLBACK_LOOKUP_SECONDS,
@@ -41,6 +41,9 @@ class VegvesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step – API key entry."""
         errors: dict[str, str] = {}
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         if user_input is not None:
             api_key = user_input[CONF_API_KEY].strip()
 
@@ -61,7 +64,7 @@ class VegvesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except VegvesenConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected error during API key validation")
                 errors["base"] = "unknown"
 
@@ -75,6 +78,46 @@ class VegvesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: dict[str, str]
+    ) -> config_entries.ConfigFlowResult:
+        """Start reauthentication after the API rejects a saved key."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Validate and save a replacement API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY].strip()
+            api = VegvesenApi(async_get_clientsession(self.hass), api_key)
+
+            try:
+                valid = await api.async_validate_api_key()
+                if not valid:
+                    errors["base"] = "invalid_auth"
+            except VegvesenConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during API key reauthentication")
+                errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: api_key},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=USER_SCHEMA,
+            errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
         )
 
     @staticmethod

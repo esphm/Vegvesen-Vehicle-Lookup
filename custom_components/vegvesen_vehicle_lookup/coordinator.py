@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 import logging
 
+import homeassistant.util.dt as dt_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-import homeassistant.util.dt as dt_util
 
 from .api import (
     VegvesenApi,
@@ -67,32 +68,29 @@ class VegvesenCoordinator(DataUpdateCoordinator[dict]):
             return self.data or {}
 
         _LOGGER.debug("Looking up vehicle: %s", self.regnr)
+        self.last_updated_ts = dt_util.utcnow().isoformat()
+        self.raw_json = None
 
         try:
             data = await self.api.async_lookup(self.regnr)
         except VegvesenAuthError as err:
             self.last_status = "auth_error"
-            _LOGGER.error("Authentication error during lookup: %s", err)
-            raise UpdateFailed(f"Authentication error: {err}") from err
+            raise ConfigEntryAuthFailed("The API key was rejected") from err
         except VegvesenNotFoundError:
             self.last_status = "not_found"
-            self.last_updated_ts = dt_util.utcnow().isoformat()
             _LOGGER.info("Vehicle not found for registration number: %s", self.regnr)
             # Return empty dict – not an UpdateFailed (user mistake, not infra)
-            self.raw_json = None
             return {}
         except VegvesenConnectionError as err:
             self.last_status = "connection_error"
             _LOGGER.warning("Connection error during lookup: %s", err)
             raise UpdateFailed(f"Connection error: {err}") from err
         except VegvesenApiError as err:
-            self.last_status = f"error"
+            self.last_status = "error"
             _LOGGER.error("API error during lookup: %s", err)
             raise UpdateFailed(str(err)) from err
 
         self.last_status = "success"
-        self.last_updated_ts = dt_util.utcnow().isoformat()
-
         # Store truncated raw JSON for the diagnostic entity
         try:
             raw = json.dumps(data, ensure_ascii=False)

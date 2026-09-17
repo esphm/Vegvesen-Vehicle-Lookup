@@ -1,12 +1,12 @@
 # 🚗 Vegvesen Vehicle Lookup - Custom Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Validate](https://github.com/esphm/Vegvesen-Vehicle-Lookup/actions/workflows/validate.yml/badge.svg)](https://github.com/esphm/Vegvesen-Vehicle-Lookup/actions/workflows/validate.yml)
+[![GitHub release](https://img.shields.io/github/v/release/esphm/Vegvesen-Vehicle-Lookup)](https://github.com/esphm/Vegvesen-Vehicle-Lookup/releases)
 
 A Home Assistant custom integration for looking up Norwegian vehicle technical data from [Statens vegvesen](https://www.vegvesen.no/) using the **Autosys enkeltoppslag** API.
 
 Enter a registration number → get 106 vehicle attributes as sensor entities.
-
-> Built with Claude Opus 4.6
 
 ---
 
@@ -33,6 +33,16 @@ Enter a registration number → get 106 vehicle attributes as sensor entities.
 1. Open **HACS** → **Integrations** → ⋮ → **Custom repositories**
 2. Add `https://github.com/esphm/Vegvesen-Vehicle-Lookup` as **Integration**
 3. Install and restart Home Assistant
+
+### Updating
+
+HACS periodically checks the repository's published GitHub releases. When a newer
+version is available, HACS shows an update for the integration. Install the update
+in HACS and restart Home Assistant when prompted.
+
+If an update does not appear immediately, open HACS, use ⋮ → **Update information**,
+and check again. Git tags alone are not enough: a version must be published as a
+GitHub release before HACS offers it to existing installations.
 
 ### Manual
 

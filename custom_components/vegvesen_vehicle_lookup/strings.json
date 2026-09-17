@@ -3,12 +3,22 @@
     "step": {
       "user": {
         "title": "Vegvesen Vehicle Lookup",
-        "description": "Enter your Statens vegvesen API key.\n\nYou can apply for an API key at:\nhttps://www.vegvesen.no/dinside/data-og-api-er/tilgang-til-api-for-kjoretoyopplysninger/vis",
+        "description": "Enter your Statens vegvesen API key. [Apply for an API key]({api_key_url}).",
         "data": {
           "api_key": "API Key"
         },
         "data_description": {
           "api_key": "Your Statens vegvesen API key for the Kjøretøydata enkeltoppslag API"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Vegvesen Vehicle Lookup",
+        "description": "The saved API key was rejected. Enter a valid Statens vegvesen API key. [Apply for an API key]({api_key_url}).",
+        "data": {
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "api_key": "Your replacement API key for the Kjøretøydata enkeltoppslag API"
         }
       }
     },
@@ -18,7 +28,9 @@
       "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
     },
     "abort": {
-      "already_configured": "This API key is already configured."
+      "already_configured": "This API key is already configured.",
+      "reauth_successful": "API key updated successfully.",
+      "single_instance_allowed": "Only one Vegvesen Vehicle Lookup instance can be configured."
     }
   },
   "options": {

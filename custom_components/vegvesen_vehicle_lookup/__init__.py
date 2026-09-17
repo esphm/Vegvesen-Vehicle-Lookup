@@ -6,7 +6,6 @@ import logging
 import re
 
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -58,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_options(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> None:
+async def _async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload integration when options are changed."""
     _LOGGER.debug("Options changed – reloading integration")
     await hass.config_entries.async_reload(entry.entry_id)
@@ -89,14 +86,14 @@ def _register_services(hass: HomeAssistant) -> None:
         regnr_raw: str | None = call.data.get(ATTR_REGNR)
 
         # Find the first available coordinator
-        for entry_id, entry_data in hass.data.get(DOMAIN, {}).items():
+        for entry_data in hass.data.get(DOMAIN, {}).values():
             if not isinstance(entry_data, dict):
                 continue
             coordinator: VegvesenCoordinator = entry_data["coordinator"]
 
             if regnr_raw:
                 normalized = regnr_raw.upper().replace(" ", "")
-                if not re.match(REGNR_PATTERN, normalized):
+                if not re.fullmatch(REGNR_PATTERN, normalized):
                     _LOGGER.warning(
                         "Service call with invalid regnr format: %s",
                         regnr_raw,
@@ -109,6 +106,8 @@ def _register_services(hass: HomeAssistant) -> None:
                 text_entity = entry_data.get("text_entity")
                 if text_entity is not None:
                     text_entity.set_regnr_from_service(normalized)
+            elif (text_entity := entry_data.get("text_entity")) is not None:
+                text_entity.cancel_pending_lookup()
 
             await coordinator.async_request_refresh()
             break  # service affects first entry only

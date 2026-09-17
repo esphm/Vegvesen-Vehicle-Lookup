@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -36,9 +38,7 @@ async def async_setup_entry(
 
     # Vehicle attribute sensors
     for attr_key, attr_def in SUPPORTED_ATTRIBUTES.items():
-        entities.append(
-            VegvesenAttributeSensor(coordinator, entry, attr_key, attr_def)
-        )
+        entities.append(VegvesenAttributeSensor(coordinator, entry, attr_key, attr_def))
 
     # Diagnostic sensors (always created)
     entities.append(VegvesenLastStatusSensor(coordinator, entry))
@@ -51,6 +51,7 @@ async def async_setup_entry(
 # ---------------------------------------------------------------------------
 # Base device-info mixin
 # ---------------------------------------------------------------------------
+
 
 class _VegvesenSensorBase(CoordinatorEntity[VegvesenCoordinator], SensorEntity):
     """Base class that shares device info and coordinator wiring."""
@@ -79,6 +80,7 @@ class _VegvesenSensorBase(CoordinatorEntity[VegvesenCoordinator], SensorEntity):
 # ---------------------------------------------------------------------------
 # Vehicle attribute sensor
 # ---------------------------------------------------------------------------
+
 
 class VegvesenAttributeSensor(_VegvesenSensorBase):
     """Sensor for a single curated vehicle attribute."""
@@ -117,6 +119,7 @@ class VegvesenAttributeSensor(_VegvesenSensorBase):
 # Diagnostic: Last lookup status
 # ---------------------------------------------------------------------------
 
+
 class VegvesenLastStatusSensor(_VegvesenSensorBase):
     """Diagnostic sensor showing the last lookup status."""
 
@@ -136,10 +139,16 @@ class VegvesenLastStatusSensor(_VegvesenSensorBase):
     def native_value(self) -> str:
         return self.coordinator.last_status
 
+    @property
+    def available(self) -> bool:
+        """Keep diagnostics visible when the latest request failed."""
+        return True
+
 
 # ---------------------------------------------------------------------------
 # Diagnostic: Last updated timestamp
 # ---------------------------------------------------------------------------
+
 
 class VegvesenLastUpdatedSensor(_VegvesenSensorBase):
     """Diagnostic sensor showing when data was last updated."""
@@ -147,6 +156,7 @@ class VegvesenLastUpdatedSensor(_VegvesenSensorBase):
     _attr_name = "Last Updated"
     _attr_icon = "mdi:clock-outline"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self,
@@ -157,13 +167,21 @@ class VegvesenLastUpdatedSensor(_VegvesenSensorBase):
         self._attr_unique_id = f"{entry.entry_id}_last_updated"
 
     @property
-    def native_value(self) -> str | None:
-        return self.coordinator.last_updated_ts
+    def native_value(self) -> datetime | None:
+        if self.coordinator.last_updated_ts is None:
+            return None
+        return dt_util.parse_datetime(self.coordinator.last_updated_ts)
+
+    @property
+    def available(self) -> bool:
+        """Keep diagnostics visible when the latest request failed."""
+        return True
 
 
 # ---------------------------------------------------------------------------
 # Diagnostic: Raw JSON response
 # ---------------------------------------------------------------------------
+
 
 class VegvesenRawResponseSensor(_VegvesenSensorBase):
     """Diagnostic sensor that exposes the raw API response for troubleshooting.

@@ -55,9 +55,10 @@ class VegvesenLookupButton(ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press – trigger immediate lookup."""
         if not self.coordinator.regnr:
-            _LOGGER.warning(
-                "Lookup button pressed but no registration number is set"
-            )
+            _LOGGER.warning("Lookup button pressed but no registration number is set")
             return
+        entry_data = self.hass.data[DOMAIN][self._entry.entry_id]
+        if (text_entity := entry_data.get("text_entity")) is not None:
+            text_entity.cancel_pending_lookup()
         _LOGGER.debug("Lookup button pressed – refreshing data")
         await self.coordinator.async_request_refresh()

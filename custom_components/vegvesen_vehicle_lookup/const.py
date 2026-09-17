@@ -15,6 +15,10 @@ API_BASE_URL = (
     "datautlevering/enkeltoppslag/kjoretoydata"
 )
 API_TIMEOUT = 30
+API_KEY_URL = (
+    "https://www.vegvesen.no/dinside/data-og-api-er/"
+    "tilgang-til-api-for-kjoretoyopplysninger/vis"
+)
 
 # Registration number validation (2 letters + 5 digits)
 REGNR_PATTERN = r"^[A-Za-z]{2}\d{5}$"
