@@ -1,6 +1,6 @@
 # 🚗 Vegvesen Vehicle Lookup - Custom Home Assistant Integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Marketplace](https://img.shields.io/badge/Marketplace-Custom-41BDF5.svg)](https://www.home-assistant.io/integrations/marketplace/)
 [![Validate](https://github.com/esphm/Vegvesen-Vehicle-Lookup/actions/workflows/validate.yml/badge.svg)](https://github.com/esphm/Vegvesen-Vehicle-Lookup/actions/workflows/validate.yml)
 [![GitHub release](https://img.shields.io/github/v/release/esphm/Vegvesen-Vehicle-Lookup)](https://github.com/esphm/Vegvesen-Vehicle-Lookup/releases)
 
@@ -14,7 +14,7 @@ Enter a registration number → get 106 vehicle attributes as sensor entities.
 
 - **106 vehicle attributes** — make, model, fuel type, engine specs, weights, dimensions, CO₂/WLTP/NEDC emissions, noise levels, inspection dates, and more
 - **24 sensors enabled by default** — enable any of the remaining 82 from the HA entity UI
-- **On-demand only** — no polling; lookups trigger on text input change, button press, service call, or HA restart
+- **On-demand only** — no polling; lookups trigger on text input change, button press, action call, or HA restart
 - **Smart debounce** — configurable delay with fallback timeout for rapid edits
 - **Diagnostic sensors** — lookup status, timestamp, and raw JSON response
 
@@ -26,31 +26,55 @@ Enter a registration number → get 106 vehicle attributes as sensor entities.
 
 ---
 
+<!-- ha-marketplace:exclude-start -->
 ## 📦 Installation
 
-### HACS (recommended)
+### Marketplace (Home Assistant 2026.11 and newer)
 
-1. Open **HACS** → **Integrations** → ⋮ → **Custom repositories**
+Starting with Home Assistant 2026.11, HACS is built in as the **Marketplace**.
+
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=esphm&repository=Vegvesen-Vehicle-Lookup&category=integration)
+
+Or add it by hand:
+
+1. Go to **Settings** → **Marketplace** → **Add from link** (connect GitHub when asked)
+2. Enter `esphm/Vegvesen-Vehicle-Lookup` and select **Add**
+3. Open the repository and select **Install**
+
+No restart is needed for a first install; the setup page opens right away.
+
+### HACS (Home Assistant 2026.10 and older)
+
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=esphm&repository=Vegvesen-Vehicle-Lookup&category=integration)
+
+1. Open **HACS** → ⋮ → **Custom repositories**
 2. Add `https://github.com/esphm/Vegvesen-Vehicle-Lookup` as **Integration**
 3. Install and restart Home Assistant
 
+If you upgrade to 2026.11 later, the Marketplace takes over the installation
+automatically, including the update entity.
+
 ### Updating
 
-HACS periodically checks the repository's published GitHub releases. When a newer
-version is available, HACS shows an update for the integration. Install the update
-in HACS and restart Home Assistant when prompted.
+New versions are published as GitHub releases and show up under
+**Settings** → **Updates**. Install the update and restart Home Assistant when the
+repair asks you to.
 
-If an update does not appear immediately, open HACS, use ⋮ → **Update information**,
-and check again. Git tags alone are not enough: a version must be published as a
-GitHub release before HACS offers it to existing installations.
+This repository is added from a link (it is not in the default catalog yet), so the
+Marketplace checks it for updates through the GitHub API every 48 hours, and only
+while GitHub is connected. Keep the GitHub connection under
+**Settings** → **Devices & services** → **Marketplace** → **Reconfigure**.
 
 ### Manual
 
 Copy `custom_components/vegvesen_vehicle_lookup/` to your HA `config/custom_components/` and restart.
+<!-- ha-marketplace:exclude-end -->
 
 ---
 
 ## ⚙️ Setup
+
+[![Open your Home Assistant instance and start setting up Vegvesen Vehicle Lookup.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vegvesen_vehicle_lookup)
 
 1. **Settings** → **Devices & Services** → **Add Integration** → search **Vegvesen Vehicle Lookup**
 2. Enter your Statens vegvesen API key ([apply here](https://www.vegvesen.no/dinside/data-og-api-er/tilgang-til-api-for-kjoretoyopplysninger/vis))
@@ -66,28 +90,28 @@ Copy `custom_components/vegvesen_vehicle_lookup/` to your HA `config/custom_comp
 2. Wait for the debounce timer, or press **Lookup Now**
 3. Sensor entities populate with vehicle data
 
-### Service call
+### Action
 
 ```yaml
-service: vegvesen_vehicle_lookup.lookup
+action: vegvesen_vehicle_lookup.lookup
 data:
   regnr: "AB12345"
 ```
 
-Omit `regnr` to use the currently entered registration number.
+Omit `regnr` to use the currently entered registration number. An invalid or
+missing registration number raises an error in the UI or automation trace.
 
 ### Automation example
 
 ```yaml
-automation:
-  - alias: "Look up vehicle on NFC tag scan"
-    trigger:
-      - platform: tag
-        tag_id: my_nfc_tag
-    action:
-      - service: vegvesen_vehicle_lookup.lookup
-        data:
-          regnr: "AB12345"
+alias: "Look up vehicle on NFC tag scan"
+triggers:
+  - trigger: tag
+    tag_id: my_nfc_tag
+actions:
+  - action: vegvesen_vehicle_lookup.lookup
+    data:
+      regnr: "AB12345"
 ```
 
 ---
@@ -101,7 +125,7 @@ automation:
 | *(106 attribute sensors)* | `sensor` | See [full list](#-supported-attributes) below |
 | Last Lookup Status | `sensor` | 🔧 Diagnostic — success / not_found / error |
 | Last Updated | `sensor` | 🔧 Diagnostic — timestamp of last lookup |
-| Raw Response | `sensor` | 🔧 Diagnostic — raw JSON (disabled by default) |
+| Raw Response | `sensor` | 🔧 Diagnostic — raw JSON (disabled by default, not stored in history) |
 
 ---
 

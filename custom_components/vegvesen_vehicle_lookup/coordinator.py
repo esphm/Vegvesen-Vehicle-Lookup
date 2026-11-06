@@ -42,11 +42,11 @@ class VegvesenCoordinator(DataUpdateCoordinator[dict]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=None,  # manual refresh only
         )
         self.api = api
-        self.config_entry = entry
 
         # Runtime state
         self.regnr: str | None = None

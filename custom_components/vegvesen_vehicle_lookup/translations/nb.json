@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vegvesen Vehicle Lookup",
+        "description": "Skriv inn API-nøkkelen din fra Statens vegvesen. [Søk om API-nøkkel]({api_key_url}).",
+        "data": {
+          "api_key": "API-nøkkel"
+        },
+        "data_description": {
+          "api_key": "API-nøkkelen din fra Statens vegvesen for Kjøretøydata enkeltoppslag"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Koble til Vegvesen Vehicle Lookup på nytt",
+        "description": "Den lagrede API-nøkkelen ble avvist. Skriv inn en gyldig API-nøkkel fra Statens vegvesen. [Søk om API-nøkkel]({api_key_url}).",
+        "data": {
+          "api_key": "API-nøkkel"
+        },
+        "data_description": {
+          "api_key": "Ny API-nøkkel for Kjøretøydata enkeltoppslag"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ugyldig API-nøkkel. Kontroller nøkkelen og prøv igjen.",
+      "cannot_connect": "Kunne ikke koble til Vegvesen-API-et. Sjekk nettverket og prøv igjen senere.",
+      "unknown": "Det oppstod en uventet feil. Se Home Assistant-loggen for detaljer."
+    },
+    "abort": {
+      "already_configured": "Denne API-nøkkelen er allerede konfigurert.",
+      "reauth_successful": "API-nøkkelen ble oppdatert.",
+      "single_instance_allowed": "Bare én forekomst av Vegvesen Vehicle Lookup kan konfigureres."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Innstillinger for Vegvesen Vehicle Lookup",
+        "description": "Juster forsinkelsen før oppslag.",
+        "data": {
+          "debounce_seconds": "Forsinkelse (sekunder)",
+          "fallback_lookup_seconds": "Maks ventetid (sekunder)"
+        },
+        "data_description": {
+          "debounce_seconds": "Sekunder å vente etter siste endring i tekstfeltet før oppslag. Sett til 0 for å slå opp straks ved hver endring.",
+          "fallback_lookup_seconds": "Maks antall sekunder etter første endring før oppslag tvinges, selv om teksten fortsatt endres. Sett til 0 for å slå av."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_regnr": {
+      "message": "«{regnr}» er ikke et gyldig registreringsnummer. Bruk 2 bokstaver og 5 sifre, for eksempel AB12345."
+    },
+    "no_regnr": {
+      "message": "Registreringsnummer mangler. Skriv det inn i Vehicle Registration Number-entiteten, eller send med regnr til handlingen."
+    },
+    "not_loaded": {
+      "message": "Vegvesen Vehicle Lookup er ikke satt opp eller ikke lastet."
+    }
+  },
+  "services": {
+    "lookup": {
+      "name": "Slå opp kjøretøy",
+      "description": "Henter kjøretøydata fra Statens vegvesen. Bruker oppgitt registreringsnummer, eller det som står i tekstfeltet.",
+      "fields": {
+        "regnr": {
+          "name": "Registreringsnummer",
+          "description": "Norsk registreringsnummer, 2 bokstaver + 5 sifre (for eksempel EF56000). La stå tomt for å bruke gjeldende verdi."
+        }
+      }
+    }
+  }
+}

@@ -126,14 +126,11 @@ class VegvesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> VegvesenOptionsFlowHandler:
         """Create the options flow."""
-        return VegvesenOptionsFlowHandler(config_entry)
+        return VegvesenOptionsFlowHandler()
 
 
 class VegvesenOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options for Vegvesen Vehicle Lookup."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict | None = None
@@ -142,7 +139,7 @@ class VegvesenOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current = self._config_entry.options
+        current = self.config_entry.options
 
         schema = vol.Schema(
             {
