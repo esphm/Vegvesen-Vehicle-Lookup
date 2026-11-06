@@ -48,5 +48,28 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_regnr": {
+      "message": "\"{regnr}\" is not a valid registration number. Use 2 letters followed by 5 digits, for example AB12345."
+    },
+    "no_regnr": {
+      "message": "No registration number is set. Enter one in the Vehicle Registration Number entity or pass regnr to the action."
+    },
+    "not_loaded": {
+      "message": "Vegvesen Vehicle Lookup is not set up or not loaded."
+    }
+  },
+  "services": {
+    "lookup": {
+      "name": "Look up vehicle",
+      "description": "Looks up vehicle data from Statens vegvesen. Uses the given registration number, or the one currently entered in the text entity.",
+      "fields": {
+        "regnr": {
+          "name": "Registration number",
+          "description": "Norwegian registration number, 2 letters + 5 digits (for example EF56000). Leave empty to use the current value."
+        }
+      }
+    }
   }
 }

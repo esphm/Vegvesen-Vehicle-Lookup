@@ -6,38 +6,34 @@ import logging
 import re
 
 from homeassistant.components.text import TextEntity, TextMode
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import VegvesenConfigEntry
 from .const import (
     CONF_DEBOUNCE_SECONDS,
     CONF_FALLBACK_LOOKUP_SECONDS,
     DEFAULT_DEBOUNCE_SECONDS,
     DEFAULT_FALLBACK_LOOKUP_SECONDS,
-    DOMAIN,
     REGNR_PATTERN,
 )
-from .coordinator import VegvesenCoordinator
+from .entity import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VegvesenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the text entity."""
-    coordinator: VegvesenCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    entity = VegvesenRegnrText(coordinator, entry)
+    entity = VegvesenRegnrText(entry)
+    # Register the text entity so the action handler and button can reach it
+    entry.runtime_data.text_entity = entity
     async_add_entities([entity])
-
-    # Register the text entity so the service handler can reach it
-    hass.data[DOMAIN][entry.entry_id]["text_entity"] = entity
 
 
 class VegvesenRegnrText(TextEntity, RestoreEntity):
@@ -51,30 +47,15 @@ class VegvesenRegnrText(TextEntity, RestoreEntity):
     _attr_native_max = 8
     _attr_pattern = r"[A-Za-z]{2} ?\d{5}"
 
-    def __init__(
-        self,
-        coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
-    ) -> None:
-        self.coordinator = coordinator
+    def __init__(self, entry: VegvesenConfigEntry) -> None:
+        self.coordinator = entry.runtime_data.coordinator
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_regnr_input"
+        self._attr_device_info = build_device_info(entry.entry_id)
         self._attr_native_value: str | None = None
         self._debounce_unsub: CALLBACK_TYPE | None = None
         self._fallback_unsub: CALLBACK_TYPE | None = None
         self._startup_unsub: CALLBACK_TYPE | None = None
-
-    # -- Device info -----------------------------------------------------------
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name="Vegvesen Vehicle Lookup",
-            manufacturer="Statens vegvesen",
-            model="Kjøretøydata API",
-            entry_type=DeviceEntryType.SERVICE,
-        )
 
     # -- Lifecycle -------------------------------------------------------------
 

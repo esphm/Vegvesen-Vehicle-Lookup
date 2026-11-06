@@ -8,31 +8,30 @@ from typing import Any
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MAX_LENGTH_STATE_STATE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import VegvesenConfigEntry
 from .const import (
-    DOMAIN,
     SUPPORTED_ATTRIBUTES,
     AttributeDefinition,
     safe_get,
 )
 from .coordinator import VegvesenCoordinator
+from .entity import build_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VegvesenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator: VegvesenCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator = entry.runtime_data.coordinator
 
     entities: list[SensorEntity] = []
 
@@ -61,20 +60,11 @@ class _VegvesenSensorBase(CoordinatorEntity[VegvesenCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
+        entry: VegvesenConfigEntry,
     ) -> None:
         super().__init__(coordinator)
         self._entry = entry
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name="Vegvesen Vehicle Lookup",
-            manufacturer="Statens vegvesen",
-            model="Kjøretøydata API",
-            entry_type=DeviceEntryType.SERVICE,
-        )
+        self._attr_device_info = build_device_info(entry.entry_id)
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +78,7 @@ class VegvesenAttributeSensor(_VegvesenSensorBase):
     def __init__(
         self,
         coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
+        entry: VegvesenConfigEntry,
         attr_key: str,
         attr_def: AttributeDefinition,
     ) -> None:
@@ -109,10 +99,10 @@ class VegvesenAttributeSensor(_VegvesenSensorBase):
         if not data:
             return None
         value = safe_get(data, *self._attr_def.path)
-        # Convert numeric types to a string-safe representation
-        if value is not None:
-            return value
-        return None
+        # Free-text fields can exceed the maximum length of a state
+        if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
+            return value[: MAX_LENGTH_STATE_STATE - 1] + "…"
+        return value
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +120,7 @@ class VegvesenLastStatusSensor(_VegvesenSensorBase):
     def __init__(
         self,
         coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
+        entry: VegvesenConfigEntry,
     ) -> None:
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_last_status"
@@ -161,7 +151,7 @@ class VegvesenLastUpdatedSensor(_VegvesenSensorBase):
     def __init__(
         self,
         coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
+        entry: VegvesenConfigEntry,
     ) -> None:
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_last_updated"
@@ -194,11 +184,13 @@ class VegvesenRawResponseSensor(_VegvesenSensorBase):
     _attr_icon = "mdi:code-json"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False  # disabled by default
+    # The response can be large; keep it out of the recorder database
+    _unrecorded_attributes = frozenset({"raw_response"})
 
     def __init__(
         self,
         coordinator: VegvesenCoordinator,
-        entry: ConfigEntry,
+        entry: VegvesenConfigEntry,
     ) -> None:
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_raw_response"

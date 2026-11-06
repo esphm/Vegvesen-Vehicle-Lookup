@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.0] - 2026-11-06
+
+### Changed
+
+- Ready for the Home Assistant Marketplace that replaces HACS in 2026.11: README
+  install instructions and My links for both the Marketplace and HACS, a Marketplace
+  exclude block, an integration category, and `country` in `hacs.json`. The removed
+  `render_readme` key is gone.
+- The `lookup` action is registered when Home Assistant starts, and raises a
+  translated error for an invalid or missing registration number instead of only
+  logging a warning. The **Lookup Now** button does the same.
+- Action names and descriptions moved to the translation files.
+- Uses `entry.runtime_data` instead of `hass.data`, and declares a single config
+  entry in the manifest.
+
+### Added
+
+- Norwegian Bokmål translation.
+- Tests for setup, unloading, the lookup action, and long values.
+
+### Fixed
+
+- Free-text values longer than 255 characters, such as vehicle remarks, are
+  truncated instead of failing to write the sensor state.
+- The raw response attribute is no longer written to the recorder database, where
+  large responses exceeded the attribute size limit.
+
+### Removed
+
+- `strings.json`, which custom integrations do not use. Translations live in
+  `translations/`.
+
 ## [1.1.0] - 2026-09-17
 
 ### Added
@@ -40,6 +72,7 @@ All notable changes to this project are documented in this file.
 
 - Initial release.
 
+[1.2.0]: https://github.com/esphm/Vegvesen-Vehicle-Lookup/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/esphm/Vegvesen-Vehicle-Lookup/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/esphm/Vegvesen-Vehicle-Lookup/releases/tag/v1.0.1
 [1.0.0]: https://github.com/esphm/Vegvesen-Vehicle-Lookup/releases/tag/v1.0.0
